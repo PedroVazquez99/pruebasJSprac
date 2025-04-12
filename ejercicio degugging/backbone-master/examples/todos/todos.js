@@ -83,7 +83,7 @@ $(function(){
 
     //... is a list tag.
     tagName:  "li",
-	items: [],
+	// items: [], // este array no se limpiaba puesto que todas las instancias lo comparten
 	
     // Cache the template function for a single item.
     template: _.template($('#item-template').html()),
@@ -104,26 +104,26 @@ $(function(){
     initialize: function() {
       this.listenTo(this.model, 'change', this.render);
       this.listenTo(this.model, 'destroy', this.remove);
-	  this.items.push("destroy");
-	  this.items.push("clear");
+      this.items = ["destroy", "clear"]; // Se inicializa el  array en local 
     },
 
     // Re-render the titles of the todo item.
     render: function() {
-	  var position = this.model.collection.indexOf(this.model);
-	  var json = _.extend(this.model.toJSON(), {number: (position != null) ? position : "?"});
+      var position = this.model.collection.indexOf(this.model);
+      var json = _.extend(this.model.toJSON(), { number: (position != null) ? position : "?" });
       this.$el.html(this.template(json));
       this.$el.toggleClass('done', this.model.get('done'));
       this.input = this.$('.edit');
-        var self = this;
-        self.$el.find("div.view").empty();
-	  _.each(this.items,function(value){
-		var li = $("<li></li>");
-		var a = $("<a href='#'></a>").addClass(value);
-		a.text(value[0]);
-		a.attr("title",value);
-		self.$el.find("div.view").append(a);
-	  });
+      var self = this;
+      self.$el.find("div.view").empty();
+      
+      _.each(this.items, function(value) {
+          var li = $("<li></li>");
+          var a = $("<a href='#'></a>").addClass(value);
+          a.text(value[0]);
+          a.attr("title", value);
+          self.$el.find("div.view").append(a);
+      });
       return this;
     },
 
@@ -202,19 +202,18 @@ $(function(){
 		},
 		
 		render: function() {
-			this.$el.find(".done-list").empty();
-			var pending = Todos.where({done: false});
-			if(pending.length !== "0"){
-				_.each(Todos.models, function(model){
-					if(model.get("done")){
-						this.$el.find(".done-list").append(this.template({text:model.get("title")}));
-					}
-				});
-			}else{
-				this.$el.append(this.template({text:"There are no done tasks."}));
-			}
-		return this;
-    }
+      this.$el.find(".done-list").empty();
+      var doneItems = Todos.where({done: true});
+      var self = this; // Asegura que el bind sea sobre doneItems
+      if(doneItems.length !== 0){
+          _.each(doneItems, function(model){
+              self.$el.find(".done-list").append(self.template({ text: model.get("title") }));
+          });
+      } else {
+        this.$el.find(".done-list").append(this.template({ text:"There are no done tasks." })); // Busca la lista y añade directamente 
+      }
+      return this;
+  }
 		
   });
 
